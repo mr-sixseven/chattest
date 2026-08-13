@@ -37,6 +37,10 @@ const LS_NICK  = 'minichat:nick';         // claves de localStorage
 const LS_SOUND = 'minichat:sonido';
 const LS_ROOM  = 'minichat:ultimaSala';
 
+/* ═══ Imágenes: límites para caber en el paquete MQTT (~256 KB) ═══ */
+const IMG_MAX_DIM = 1280;  // lado máximo tras remuestreo
+const IMG_MAX_KB  = 150;   // tamaño binario objetivo (base64 infla ~33%)
+
 /* ═══════════════════════════════════════════════════════════════════════
    2 · GENERADOR DE NICKS
    ~190 nombres × ~60 adjetivos × 990 números ≈ 11 millones de combos
@@ -338,6 +342,16 @@ function handleMessage(raw){
     blip([740, 988]);
     bumpUnread();
   }
+  else if (p.t === 'i'){                         // ── imagen ──
+  p.nick = String(p.nick || '❔ Anónimo').slice(0, 60);
+  if (typeof p.img !== 'string'
+      || !/^data:image\/(png|jpe?g|gif|webp);base64,/.test(p.img)
+      || p.img.length > 300000) return;        // descartar paquetes raros o gigantes
+  lastMsg = { id: p.id, ts: Date.now() };
+  appendMsg(p, false);
+  blip([740, 988]);
+  bumpUnread();
+}
   else if (p.t === 'p')  handlePresence(p);      // ── presencia ──
   else if (p.t === 'ty') handleTyping(p);        // ── escribiendo… ──
 }
@@ -473,7 +487,19 @@ function appendMsg(p, mine){
     }
   }
 
-  body.appendChild(el('div', 'bubble', p.text));
+  const bubble = el('div', 'bubble');
+if (p.img){
+  const im = document.createElement('img');
+  im.src = p.img;
+  im.alt = 'Imagen de ' + p.nick;
+  im.className = 'bubble-img';
+  im.addEventListener('click', () => openLightbox(p.img));
+  bubble.classList.add('bubble--img');
+  bubble.appendChild(im);
+} else {
+  bubble.textContent = p.text;
+}
+body.appendChild(bubble);
   if (mine) body.appendChild(el('time', 'msg-time', fmtTime(new Date())));
 
   row.appendChild(body);
@@ -554,6 +580,51 @@ function onComposerInput(){
   } else if (typingActive){
     sendTypingEvent(false);
   }
+}
+/* ═══ Envío de imágenes comprimidas ═══ */
+function compressImage(file, maxDim = IMG_MAX_DIM, maxKB = IMG_MAX_KB){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width  * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const cv = Object.assign(document.createElement('canvas'), { width: w, height: h });
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      let q = .85, out;
+      do {
+        out = cv.toDataURL('image/jpeg', q);
+        q -= .1;
+      } while (out.length * .75 > maxKB * 1024 && q >= .3);
+      resolve(out);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('imagen no válida')); };
+    img.src = url;
+  });
+}
+
+async function sendImageFile(file){
+  if (!inRoom || !client) return;
+  if (!file || !file.type.startsWith('image/')){ toast('Solo se admiten imágenes'); return; }
+  toast('🖼️ Comprimiendo imagen…');
+  try {
+    const dataUrl = await compressImage(file);
+    const payload = { t:'i', id: myId, nick: myNick, img: dataUrl, ts: Date.now() };
+    try { client.publish(topic, JSON.stringify(payload)); } catch(e){ return; }
+    lastMsg = { id: myId, ts: Date.now() };
+    appendMsg(payload, true);
+  } catch(e){ toast('No se pudo procesar la imagen 😕'); }
+}
+
+function openLightbox(src){
+  const lb = el('div', 'lightbox');
+  const im = document.createElement('img');
+  im.src = src;
+  lb.appendChild(im);
+  lb.addEventListener('click', () => lb.remove());
+  document.body.appendChild(lb);
 }
 
 const EMOJIS = [
@@ -728,6 +799,19 @@ function bindUI(){
   input.addEventListener('input', onComposerInput);
   input.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+  });
+
+    // Botón e input de imagen
+  $('#imgBtn').addEventListener('click', () => $('#imgFile').click());
+  $('#imgFile').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) sendImageFile(f);
+    e.target.value = '';
+  });
+  // Pegar imagen desde portapapeles
+  $('#msgInput').addEventListener('paste', e => {
+    const f = [...(e.clipboardData?.files || [])].find(x => x.type.startsWith('image/'));
+    if (f){ e.preventDefault(); sendImageFile(f); }
   });
 
   // Panel de emojis

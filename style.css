@@ -419,6 +419,19 @@ button,input,textarea{ font-family:inherit; }
   100%{ transform:translateY(-115vh) rotate(28deg); opacity:0; }
 }
 
+/* ─────────────────────────── IMÁGENES EN CHAT ─────────────────── */
+.bubble--img{ padding:4px; }
+.bubble-img{
+  display:block; max-width:min(300px, 60vw); max-height:300px;
+  border-radius:12px; cursor:zoom-in;
+}
+.lightbox{
+  position:fixed; inset:0; z-index:80; display:grid; place-items:center;
+  background:rgba(0,0,0,.85); cursor:zoom-out; animation:fadeIn .2s ease;
+}
+.lightbox img{ max-width:92vw; max-height:92vh; border-radius:10px; box-shadow:var(--shadow-pop); }
+
+
 /* ─────────────────────────── 11 · RESPONSIVE ─────────────────── */
 @media (max-width:640px){
   .hide-sm{ display:none; }

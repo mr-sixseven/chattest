@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>MiniChat · Chat anónimo en tiempo real</title>
+  <meta name="description" content="MiniChat: chat anónimo en tiempo real mediante MQTT sobre WebSockets. Elige un nick, entra en una sala y chatea. Sin registro ni servidores propios.">
+  <meta name="theme-color" content="#0b131c">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+
+  <!-- Tipografías: Bricolage Grotesque (títulos) + Manrope (texto) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ══════════════════ FONDO AMBIENTAL (capas + brillos + puntos) ══════════════════ -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg-glow bg-glow--teal"></div>
+    <div class="bg-glow bg-glow--ember"></div>
+    <div class="bg-grid"></div>
+  </div>
+  <!-- Emojis flotantes decorativos -->
+  <div id="floaties" aria-hidden="true"></div>
+
+  <noscript>
+    <p style="padding:2rem;text-align:center;font-family:sans-serif">MiniChat necesita JavaScript para funcionar. 😕</p>
+  </noscript>
+
+  <!-- ══════════════════ PANTALLA 1 · LOBBY (nick + sala) ══════════════════ -->
+  <main id="lobby" class="screen screen--lobby">
+    <header class="brand">
+      <div class="brand-bubble" aria-hidden="true">💬</div>
+      <h1 class="brand-name">Mini<span>Chat</span></h1>
+      <p class="brand-tag">Chat anónimo en tiempo real · MQTT sobre WebSockets</p>
+    </header>
+
+    <section class="join-card" aria-label="Unirse a una sala">
+      <!-- Nick actual + botón 🎲 -->
+      <div class="field">
+        <span class="field-label">Tu nick</span>
+        <div class="nick-row">
+          <span id="nickDisplay" class="nick-display">🐧 PingüinoTurbo381</span>
+          <button id="diceBtn" class="btn btn--dice" type="button" title="Generar un nick aleatorio nuevo">
+            <span class="dice-emoji" aria-hidden="true">🎲</span> Cambiar nick
+          </button>
+        </div>
+      </div>
+
+      <!-- Sala + botón Entrar -->
+      <form id="joinForm" class="field" autocomplete="off">
+        <label class="field-label" for="roomInput">Sala</label>
+        <div class="join-row">
+          <div class="room-input-wrap">
+            <span class="room-hash" aria-hidden="true">#</span>
+            <input id="roomInput" type="text" placeholder="pizza123" maxlength="40" spellcheck="false" enterkeyhint="go">
+          </div>
+          <button type="submit" id="joinBtn" class="btn btn--primary">Entrar →</button>
+        </div>
+        <p class="hint">Quien escriba el mismo nombre de sala verá tus mensajes al instante. ¡Comparte el nombre (o el enlace) con tus amigos!</p>
+        <p id="roomError" class="error-msg" hidden>⚠️ Nombre de sala no válido: usa solo letras, números, guiones y guiones bajos.</p>
+      </form>
+    </section>
+
+    <footer class="lobby-foot">
+      <p>Sin registro · Sin instalar nada · Los mensajes viajan por un broker MQTT público y no quedan guardados: no compartas datos privados.</p>
+    </footer>
+  </main>
+
+  <!-- ══════════════════ PANTALLA 2 · SALA DE CHAT ══════════════════ -->
+  <main id="chat" class="screen screen--chat" hidden>
+
+    <!-- Barra superior -->
+    <header class="chat-top">
+      <button id="leaveBtn" class="btn btn--ghost" type="button" title="Salir y cambiar de sala">
+        ◀ <span class="hide-sm">Cambiar sala</span>
+      </button>
+
+      <div class="room-info">
+        <h2 class="room-title"><span class="hash" aria-hidden="true">#</span><span id="roomName">sala</span></h2>
+        <button id="copyBtn" class="btn btn--icon" type="button" title="Copiar enlace de la sala" aria-label="Copiar enlace de la sala">🔗</button>
+      </div>
+
+      <div class="top-meta">
+        <span id="onlinePill" class="online-pill" title="Personas conectadas">👥 <b id="onlineCount">1</b></span>
+        <button id="soundBtn" class="btn btn--icon" type="button" title="Activar o silenciar sonidos" aria-label="Sonidos">🔔</button>
+        <span id="connStatus" class="conn conn--connecting">
+          <i class="conn-dot"></i><span class="conn-text hide-sm">Conectando…</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- Área de mensajes -->
+    <div id="messages" class="messages" role="log" aria-live="polite"></div>
+
+    <!-- Botón "nuevos mensajes" -->
+    <button id="jumpBtn" class="jump-btn" type="button" hidden>↓ Nuevos mensajes</button>
+
+    <!-- Indicador "escribiendo…" + zona de escritura -->
+    <div class="composer-wrap">
+      <div id="typingBar" class="typing-bar" aria-live="polite">
+        <span class="tdots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span id="typingText"></span>
+      </div>
+
+      <form id="sendForm" class="composer">
+        <button type="button" id="emojiBtn" class="btn btn--icon" title="Emojis" aria-expanded="false">😊</button>
+        <textarea id="msgInput" rows="1" maxlength="500" placeholder="Escribe un mensaje…" aria-label="Mensaje"></textarea>
+        <button type="submit" id="sendBtn" class="btn btn--send" disabled>Enviar <span aria-hidden="true">➤</span></button>
+      </form>
+
+      <div id="emojiPanel" class="emoji-panel" hidden></div>
+    </div>
+  </main>
+
+  <!-- Notificación flotante -->
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <!-- MQTT.js (UMD) con respaldo de CDN -->
+  <script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script>
+  <script>window.mqtt || document.write('<script src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"><\/script>')</script>
+
+  <script src="script.js"></script>
+</body>
+</html>

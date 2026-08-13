@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniChat</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+
+<div id="app">
+
+    <h1>💬 MiniChat</h1>
+
+    <input id="room" placeholder="Nombre de la sala">
+
+    <button id="join">
+        Entrar
+    </button>
+
+    <hr>
+
+    <div id="messages"></div>
+
+    <div id="bottom">
+        <input id="message" placeholder="Mensaje">
+        <button id="send">Enviar</button>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

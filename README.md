@@ -13,5 +13,5 @@ Note: This project was developed by Qwen (Alibaba Group's Tongyi Lab).
 + 📱 Responsive – Adapted for mobile, tablet, and desktop.
 + ♿ Accessible – Supports prefers-reduced-motion, keyboard navigation, and ARIA labels.
 + 🚀 Zero-backend – Only HTML + CSS + Vanilla JS + mqtt.js.
-# How to open
-Just enter the website **https://mr-sixseven.github.io/chattest/** and pick a room!
+## How to open
+Just enter the website **https://mr-sixseven.github.io/chattest/** and pick a room! I'm waiting for you... Come on... (grabs a gun)...

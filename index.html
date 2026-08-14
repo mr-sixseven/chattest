@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-<!-- Scripts modulares -->
+<!-- Scripts modulares (Orden importante) -->
 <script src="js/config.js" defer></script>
 <script src="js/i18n.js" defer></script>
 <script src="js/utils.js" defer></script>
@@ -84,11 +84,22 @@
     </div>
     <div class="top-meta">
       <span id="onlinePill" class="online-pill" title="Just you here... for now">👥 <b id="onlineCount">1</b></span>
+      
+      <!-- Herramientas Extra -->
+      <button id="searchBtn" class="btn btn--icon" type="button" title="Search messages" aria-label="Search">🔍</button>
+      <button id="clearBtn" class="btn btn--icon" type="button" title="Clear local chat" aria-label="Clear chat">🗑️</button>
+      
       <button id="soundBtn" class="btn btn--icon" type="button" title="Sounds" aria-pressed="true">🔔</button>
       <button id="themeBtn" class="btn btn--icon" type="button" title="Theme" aria-label="Change theme">🎨</button>
       <span id="connStatus" class="conn conn--connecting"><i class="conn-dot"></i><span class="conn-text">Connecting…</span></span>
     </div>
   </header>
+
+  <!-- Panel de Búsqueda (Oculto por defecto) -->
+  <div id="searchPanel" class="search-panel" hidden>
+    <input type="text" id="searchInput" placeholder="Search messages...">
+    <button id="closeSearch" class="btn btn--icon btn--icon--sm" type="button" aria-label="Close search">✕</button>
+  </div>
 
   <main id="messages" class="messages" aria-live="polite"></main>
 
@@ -99,6 +110,15 @@
 
   <div class="composer-wrap">
     <button id="jumpBtn" class="jump-btn" hidden>↓ New messages</button>
+
+    <!-- Barra de Respuesta (Oculta por defecto, se muestra al responder) -->
+    <div id="replyBar" class="reply-bar" hidden>
+  <div class="reply-bar-content">
+    <span class="reply-bar-nick" id="replyNick"></span>
+    <span class="reply-bar-text" id="replyText"></span>
+  </div>
+  <button id="replyClose" class="reply-bar-close" type="button">✕</button>
+</div>
 
     <form id="sendForm" class="composer" autocomplete="off">
       <div class="composer-tools">

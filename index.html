@@ -11,7 +11,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-<script src="script.js" defer></script>
+<!-- Scripts modulares -->
+<script src="js/config.js" defer></script>
+<script src="js/i18n.js" defer></script>
+<script src="js/utils.js" defer></script>
+<script src="js/audio.js" defer></script>
+<script src="js/media.js" defer></script>
+<script src="js/chat.js" defer></script>
+<script src="js/app.js" defer></script>
 </head>
 <body>
 <noscript>MiniChat needs JavaScript to work. 😕</noscript>
@@ -95,6 +102,8 @@
 
     <form id="sendForm" class="composer" autocomplete="off">
       <div class="composer-tools">
+        <button id="imgBtn" class="btn btn--icon" type="button" title="Send Image" aria-label="Send Image">🖼️</button>
+        <button id="audioBtn" class="btn btn--icon" type="button" title="Voice Note (max 15s)" aria-label="Record voice note">🎙️</button>
         <button id="emojiBtn" class="btn btn--icon" type="button" title="Emojis" aria-label="Emojis" aria-expanded="false">😊</button>
       </div>
       <textarea id="msgInput" rows="1" maxlength="500" placeholder="Type a message…" data-i18n-placeholder="placeholder"></textarea>
@@ -102,6 +111,7 @@
     </form>
 
     <div id="emojiPanel" class="emoji-panel" hidden></div>
+    <input id="imgFile" type="file" accept="image/*" hidden>
     
     <!-- Panel de Temas -->
     <div id="themePanel" class="theme-panel" hidden>

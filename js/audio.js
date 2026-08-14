@@ -1,9 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════════
-   MiniChat · js/audio.js
-═══════════════════════════════════════════════════════════════════════ */
 'use strict';
-
 let audioCtx = null;
+
 function ensureAudio(){
   if (!audioCtx){
     try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -22,16 +19,15 @@ function blip(freqs = [880, 1174], dur = .09, vol = .12){
     const g = audioCtx.createGain();
     o.type = 'sine';
     o.frequency.value = f;
-    g.gain.setValueAtTime(0.0001, t0 + i*dur);
-    g.gain.linearRampToValueAtTime(vol, t0 + i*dur + .015);
-    g.gain.exponentialRampToValueAtTime(.0001, t0 + i*dur + dur);
+    g.gain.setValueAtTime(0.0001, t0 + i * dur);
+    g.gain.linearRampToValueAtTime(vol, t0 + i * dur + .015);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + i * dur + dur);
     o.connect(g).connect(audioCtx.destination);
-    o.start(t0 + i*dur);
-    o.stop(t0 + i*dur + dur + .05);
+    o.start(t0 + i * dur);
+    o.stop(t0 + i * dur + dur + .05);
   });
 }
 
-// Voice Recording State
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;

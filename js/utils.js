@@ -1,8 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════
-   MiniChat · js/utils.js
-═══════════════════════════════════════════════════════════════════════ */
 'use strict';
-
 const $ = sel => document.querySelector(sel);
 const el = (tag, cls, txt) => {
   const n = document.createElement(tag);
@@ -10,7 +6,6 @@ const el = (tag, cls, txt) => {
   if (txt != null) n.textContent = txt;
   return n;
 };
-
 const fmtTime = d => String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,10));
 
@@ -35,7 +30,6 @@ function toast(msg){
   toastTimer = setTimeout(() => { t.hidden = true; }, 2400);
 }
 
-// Nick Generator Data
 const NOMBRES = [
   ['🐧','Pingüino','m'],['🦊','Zorro','m'],['🦆','Pato','m'],['🐺','Lobo','m'],
   ['🐱','Gato','m'],['🐶','Perrito','m'],['🐼','Panda','m'],['🐨','Koala','m'],
@@ -72,7 +66,7 @@ const NOMBRES = [
   ['🌌','Galaxia','f'],['⭐','Estrella','f'],['🌟','Supernova','f'],['☄️','Cometa','m'],
   ['🪐','Planeta','m'],['🌙','Luna','f'],['🌕','LunaLlena','f'],['☀️','Sol','m'],
   ['🌈','Arcoíris','m'],['🌠','EstrellaFugaz','f'],['🛰️','Satélite','m'],['🔭','Telescopio','m'],
-  ['👽','Alien','m'],['🧑‍🚀','Astronauta','m'],['💫','Nebulosa','f'],['🕳️','AgujeroNegro','m'],
+  ['👽','Alien','m'],['🧑‍','Astronauta','m'],['💫','Nebulosa','f'],['🕳️','AgujeroNegro','m'],
   ['🛸','Ovni','m'],['🚀','Cohete','m'],
   ['🧪','Matraz','m'],['⚗️','Alambique','m'],['🧬','ADN','m'],['🦠','Microbio','m'],
   ['⚛️','Átomo','m'],['⚡','Electrón','m'],['🔬','Microscopio','m'],['🧲','Imán','m'],
@@ -84,6 +78,7 @@ const NOMBRES = [
   ['🗝️','LlaveAntigua','f'],['🎯','Diana','f'],['🔥','Fénix','m'],['⚔️','Espadachín','m'],
   ['🧱','Bloque','m'],['🤺','Esgrimista','m'],['🐲','Dragoncito','m'],['💠','Gema','f'],
 ];
+
 const ADJETIVOS = [
   ['Turbo','Turbo'],['Galáctico','Galáctica'],['Cósmico','Cósmica'],['Legendario','Legendaria'],
   ['Cuántico','Cuántica'],['Ninja','Ninja'],['Pixelado','Pixelada'],['Sigiloso','Sigilosa'],
@@ -102,6 +97,7 @@ const ADJETIVOS = [
   ['Diminuto','Diminuta'],['Gigante','Gigante'],['Parlanchín','Parlanchina'],['Chiflado','Chiflada'],
   ['Espacial','Espacial'],['Interdimensional','Interdimensional'],
 ];
+
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
 function buildNick(){

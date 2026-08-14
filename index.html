@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>💬 MiniChat</title>
-<meta name="description" content="MiniChat · Chat anónimo en tiempo real mediante MQTT sobre WebSockets. Sin registro y sin backend.">
+<meta name="description" content="MiniChat · Anonymous real-time chat via MQTT. No backend, no registration.">
 <meta name="theme-color" content="#0b131c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
 <script src="script.js" defer></script>
 </head>
 <body>
-<noscript>MiniChat necesita JavaScript para funcionar. 😕</noscript>
+<noscript>MiniChat needs JavaScript to work. 😕</noscript>
 
 <!-- Fondo ambiental -->
 <div class="bg" aria-hidden="true">
@@ -32,46 +32,54 @@
   <header class="brand">
     <div class="brand-bubble">💬</div>
     <h1 class="brand-name">Mini<span>Chat</span></h1>
-    <p class="brand-tag">Chat anónimo en tiempo real · MQTT sobre WebSockets</p>
+    <p class="brand-tag" data-i18n="tagline">Anonymous real-time chat · MQTT over WebSockets</p>
   </header>
 
   <form id="joinForm" class="join-card" autocomplete="off">
     <div class="field">
-      <span class="field-label">Tu nick</span>
+      <span class="field-label" data-i18n="nickLabel">Your nick</span>
       <div class="nick-row">
         <output id="nickDisplay" class="nick-display">🐧 PingüinoTurbo381</output>
-        <button id="diceBtn" class="btn btn--dice" type="button"><span class="dice-emoji">🎲</span> Cambiar nick</button>
+        <button id="diceBtn" class="btn btn--dice" type="button"><span class="dice-emoji">🎲</span> <span data-i18n="changeNick">Change</span></button>
       </div>
     </div>
     <div class="field">
-      <label class="field-label" for="roomInput">Sala</label>
+      <label class="field-label" for="roomInput" data-i18n="roomLabel">Room</label>
       <div class="join-row">
         <div class="room-input-wrap">
           <span class="room-hash" aria-hidden="true">#</span>
-          <input id="roomInput" name="sala" placeholder="nombre-de-la-sala" maxlength="40" required>
+          <input id="roomInput" name="sala" placeholder="room-name" maxlength="40" required>
         </div>
-        <button class="btn btn--primary" type="submit">Entrar →</button>
+        <button class="btn btn--primary" type="submit" data-i18n="enterBtn">Enter →</button>
       </div>
-      <p class="hint">Quien escriba el mismo nombre de sala verá tus mensajes al instante. ¡Comparte el nombre (o el enlace) con tus amigos!</p>
-      <p id="roomError" class="error-msg" hidden>⚠️ Nombre de sala no válido: usa solo letras, números, guiones y guiones bajos.</p>
+      <p class="hint" data-i18n="hint">Anyone who types the same room name will see your messages instantly. Share the name (or link) with friends!</p>
+      <p id="roomError" class="error-msg" hidden data-i18n="roomError">⚠️ Invalid room name: use only letters, numbers, hyphens and underscores.</p>
+    </div>
+    
+    <!-- Selector de Idioma -->
+    <div class="lang-selector">
+      <button type="button" class="lang-btn active" data-lang="es">ES</button>
+      <button type="button" class="lang-btn" data-lang="en">EN</button>
+      <button type="button" class="lang-btn" data-lang="cn">CN</button>
     </div>
   </form>
 
-  <p class="lobby-foot">Sin registro · Sin instalar nada · Los mensajes viajan por un broker MQTT público y no quedan guardados: no compartas datos privados.</p>
+  <p class="lobby-foot" data-i18n="footer">No registration · No install · Messages travel via public MQTT broker and are not stored: do not share private data.</p>
 </section>
 
 <!-- ═══════════ CHAT ═══════════ -->
 <section id="chat" class="screen screen--chat" hidden>
   <header class="chat-top">
-    <button id="leaveBtn" class="btn btn--ghost" type="button">◀ <span class="hide-sm">Cambiar sala</span></button>
+    <button id="leaveBtn" class="btn btn--ghost" type="button">◀ <span class="hide-sm" data-i18n="leaveBtn">Change room</span></button>
     <div class="room-info">
       <h2 class="room-title"><span class="hash">#</span><span id="roomName"></span></h2>
-      <button id="copyBtn" class="btn btn--icon btn--icon--copy" type="button" title="Copiar enlace de la sala" aria-label="Copiar enlace">🔗</button>
+      <button id="copyBtn" class="btn btn--icon btn--icon--copy" type="button" title="Copy link" aria-label="Copy link">🔗</button>
     </div>
     <div class="top-meta">
-      <span id="onlinePill" class="online-pill" title="Solo tú por aquí… de momento">👥 <b id="onlineCount">1</b></span>
-      <button id="soundBtn" class="btn btn--icon" type="button" title="Sonidos" aria-pressed="true">🔔</button>
-      <span id="connStatus" class="conn conn--connecting"><i class="conn-dot"></i><span class="conn-text">Conectando…</span></span>
+      <span id="onlinePill" class="online-pill" title="Just you here... for now">👥 <b id="onlineCount">1</b></span>
+      <button id="soundBtn" class="btn btn--icon" type="button" title="Sounds" aria-pressed="true">🔔</button>
+      <button id="themeBtn" class="btn btn--icon" type="button" title="Theme" aria-label="Change theme">🎨</button>
+      <span id="connStatus" class="conn conn--connecting"><i class="conn-dot"></i><span class="conn-text">Connecting…</span></span>
     </div>
   </header>
 
@@ -83,29 +91,26 @@
   </div>
 
   <div class="composer-wrap">
-    <button id="jumpBtn" class="jump-btn" hidden>↓ Nuevos mensajes</button>
-
-    <!-- Barra de "respondiendo a…" -->
-    <div id="replyBar" class="reply-bar" hidden>
-      <div class="reply-bar-inner">
-        <span id="replyNick"></span>
-        <span id="replyText"></span>
-      </div>
-      <button id="replyClose" class="btn btn--icon btn--icon--sm" type="button" aria-label="Cancelar respuesta">✕</button>
-    </div>
+    <button id="jumpBtn" class="jump-btn" hidden>↓ New messages</button>
 
     <form id="sendForm" class="composer" autocomplete="off">
       <div class="composer-tools">
-        <button id="imgBtn" class="btn btn--icon" type="button" title="Enviar imagen" aria-label="Enviar imagen">🖼️</button>
-        <button id="audioBtn" class="btn btn--icon" type="button" title="Nota de voz (máx. 15 s)" aria-label="Grabar nota de voz">🎙️</button>
         <button id="emojiBtn" class="btn btn--icon" type="button" title="Emojis" aria-label="Emojis" aria-expanded="false">😊</button>
       </div>
-      <textarea id="msgInput" rows="1" maxlength="500" placeholder="Escribe un mensaje… (desliza una burbuja para responder)"></textarea>
-      <button id="sendBtn" class="btn btn--send" type="submit" disabled>Enviar ➤</button>
+      <textarea id="msgInput" rows="1" maxlength="500" placeholder="Type a message…" data-i18n-placeholder="placeholder"></textarea>
+      <button id="sendBtn" class="btn btn--send" type="submit" disabled data-i18n="sendBtn">Send ➤</button>
     </form>
 
     <div id="emojiPanel" class="emoji-panel" hidden></div>
-    <input id="imgFile" type="file" accept="image/*" hidden>
+    
+    <!-- Panel de Temas -->
+    <div id="themePanel" class="theme-panel" hidden>
+      <button class="theme-opt" data-color="#ff7847" style="background:#ff7847" title="Orange"></button>
+      <button class="theme-opt" data-color="#3ad6c0" style="background:#3ad6c0" title="Teal"></button>
+      <button class="theme-opt" data-color="#a78bfa" style="background:#a78bfa" title="Purple"></button>
+      <button class="theme-opt" data-color="#f472b6" style="background:#f472b6" title="Pink"></button>
+      <button class="theme-opt" data-color="#4ade80" style="background:#4ade80" title="Green"></button>
+    </div>
   </div>
 </section>
 </body>

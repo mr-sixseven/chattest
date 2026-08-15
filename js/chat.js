@@ -120,23 +120,65 @@ function parseCommands(text){
                     ['Yes', 'No', 'Maybe', 'Never', 'Definitely'];
     return `🎱 ${answers[Math.floor(Math.random() * answers.length)]}`;
   }
-  if (text.startsWith('/lorem')) return 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
+  if (text.startsWith('/lorem')) {
+  const parrafos = [
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+    'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    'Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida.',
+    'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper.',
+    'Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum.',
+    'Praesent dapibus, neque id cursus faucibus, tortor neque egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan porttitor, facilisis luctus, metus.',
+    'Fusce risus nisl, viverra et, tempor et, pretium in, sapien. Donec venenatis vulputate lorem. Morbi nec metus. Phasellus blandit leo ut odio. Maecenas ullamcorper, dui et placerat feugiat, eros pede varius nisi.',
+    'Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; In ac dui quis mi consectetuer lacinia. Nam pretium turpis et arcu. Duis arcu tortor, suscipit eget, imperdiet nec, imperdiet iaculis, ipsum.'
+  ];
+  return parrafos[Math.floor(Math.random() * parrafos.length)];
+}
   if (text.startsWith('/encuesta')) {
-    const parts = text.slice(10).trim().split(' ').filter(x => x.length > 0);
-    if (parts.length < 3) return '⚠️ Uso: /encuesta Pregunta? Opción1 Opción2 [ÍndiceCorrecto]';
-    const question = parts[0];
-    const options = parts.slice(1, -1);
-    let correctIndex = null;
-    const last = parts[parts.length - 1];
-    const idx = parseInt(last);
-    if (!isNaN(idx) && idx >= 0 && idx < options.length) { correctIndex = idx; } else { options.push(last); }
-    if (options.length > 25) return '⚠️ Máximo 25 opciones';
-    const pollMid = uuid();
-    const pollData = { mid: pollMid, question, options, votes: new Map(), correctIndex, creator: STATE.myNick };
-    options.forEach((_, i) => pollData.votes.set(i, new Set()));
-    polls.set(pollMid, pollData);
-    return `POLL:${pollMid}:${question}:${options.join('|')}:${correctIndex !== null ? correctIndex : -1}:${STATE.myNick}`;
+  const raw = text.slice(10).trim();
+  
+  // Parsear respetando comillas: "texto con espacios" se mantiene unido
+  const tokens = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+    } else if (ch === ' ' && !inQuotes) {
+      if (current.length > 0) {
+        tokens.push(current);
+        current = '';
+      }
+    } else {
+      current += ch;
+    }
   }
+  if (current.length > 0) tokens.push(current);
+  
+  if (tokens.length < 3) return '⚠️ Uso: /encuesta "Pregunta?" "Opción1" "Opción2" [ÍndiceCorrecto]';
+  
+  const question = tokens[0];
+  const options = tokens.slice(1, -1);
+  let correctIndex = null;
+  const last = tokens[tokens.length - 1];
+  const idx = parseInt(last);
+  
+  if (!isNaN(idx) && idx >= 0 && idx < options.length) {
+    correctIndex = idx;
+  } else {
+    options.push(last);
+  }
+  
+  if (options.length > 25) return '⚠️ Máximo 25 opciones';
+  
+  const pollMid = uuid();
+  const pollData = { mid: pollMid, question, options, votes: new Map(), correctIndex, creator: STATE.myNick };
+  options.forEach((_, i) => pollData.votes.set(i, new Set()));
+  polls.set(pollMid, pollData);
+  
+  return `POLL:${pollMid}:${question}:${options.join('|')}:${correctIndex !== null ? correctIndex : -1}:${STATE.myNick}`;
+}
   return text;
 }
 function appendMsg(p, mine){

@@ -1,150 +1,121 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="whatsapp">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MiniChat</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="themes.css" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MiniChat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="themes.css"/>
 </head>
 <body>
-  <div id="app">
-    <aside id="sidebar">
-      <div class="sidebar-head">
-        <div class="avatar" id="selfAvatar">?</div>
-        <div class="sidebar-info">
-          <div class="sidebar-name" id="selfName">You</div>
-          <div class="sidebar-status" id="selfStatus">Offline</div>
-        </div>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Members <span id="memberCount">0</span></div>
-        <ul id="memberList"></ul>
-      </div>
-
-      <div class="sidebar-section">
-        <label class="sidebar-title">Room</label>
-        <input id="room" type="text" placeholder="room" value="lobby" />
-        <label class="sidebar-title">Nickname</label>
-        <input id="nickname" type="text" placeholder="nickname" />
-        <div class="sidebar-row">
-          <button id="connectBtn">Connect</button>
-          <button id="disconnectBtn">Disconnect</button>
-        </div>
-      </div>
-
-      <div class="sidebar-section">
-        <label class="sidebar-title">Theme</label>
-        <select id="themeSelect">
-          <option value="whatsapp">WhatsApp</option>
-          <option value="telegram">Telegram</option>
-          <option value="discord">Discord</option>
-          <option value="glass">Liquid Glass</option>
-        </select>
-        <label class="sidebar-title">Language</label>
-        <select id="langSelect">
-          <option value="en">English</option>
-          <option value="es">Español</option>
-        </select>
-        <label class="sidebar-title">Font size <span id="fontSizeLabel">100%</span></label>
-        <input id="fontSize" type="range" min="85" max="130" value="100" step="5" />
-        <label class="sidebar-title">Options</label>
-        <label class="opt-row"><input type="checkbox" id="soundToggle" checked /> Notification sound</label>
-        <button id="exportBtn" class="ghost">⬇️ Export chat</button>
-      </div>
-    </aside>
-
-    <main id="chat">
-      <header id="chatHeader">
-        <button id="sidebarToggle" aria-label="Menu">☰</button>
-        <div class="avatar" id="roomAvatar">#</div>
-        <div class="chat-head-info">
-          <div class="chat-head-name" id="roomName">lobby</div>
-          <div class="chat-head-status" id="roomStatus">Tap connect to join</div>
-        </div>
-        <div class="chat-head-actions">
-          <button id="starFilterBtn" title="Starred messages">⭐</button>
-          <button id="searchBtn" title="Search (Ctrl+F)">🔍</button>
-        </div>
-      </header>
-
-      <div id="searchBar" hidden>
-        <input id="searchInput" type="text" placeholder="Search messages…" />
-        <span id="searchCount"></span>
-        <button id="searchClose">✕</button>
-      </div>
-
-      <div id="selectionBar" hidden>
-        <button id="selClose" type="button">✕</button>
-        <span id="selCount">0 selected</span>
-        <div class="sel-actions">
-          <button id="selStar" type="button" title="Star">⭐</button>
-          <button id="selCopy" type="button" title="Copy">📋</button>
-          <button id="selForward" type="button" title="Forward">↪️</button>
-          <button id="selDelete" type="button" title="Delete">🗑️</button>
-        </div>
-      </div>
-
-      <div id="messages"></div>
-
-      <button id="scrollDown" hidden aria-label="Scroll to bottom">
-        ↓<span id="unreadBadge"></span>
-      </button>
-
-      <div id="dropOverlay" hidden><div>📎 Drop files to send</div></div>
-
-      <footer id="composer">
-        <div id="replyPreview" hidden>
-          <div class="reply-bar"></div>
-          <div class="reply-body">
-            <div class="reply-name"></div>
-            <div class="reply-text"></div>
-          </div>
-          <button id="replyClose" type="button">✕</button>
-        </div>
-
-        <form id="composerForm" autocomplete="off">
-          <button type="button" id="emojiBtn" title="Emoji">😊</button>
-          <button type="button" id="attachBtn" title="Attach">📎</button>
-          <textarea id="text" rows="1" placeholder="Type a message…" data-i18n-placeholder="typeMsg"></textarea>
-          <button type="button" id="audioBtn" title="Voice">🎤</button>
-          <button type="submit" id="sendBtn" data-i18n="send">Send</button>
-        </form>
-
-        <div id="attachMenu" hidden>
-          <button type="button" data-action="image">🖼️ <span>Image</span></button>
-          <button type="button" data-action="file">📄 <span>Document</span></button>
-        </div>
-
-        <div id="mentionsDrop" hidden></div>
-      </footer>
-    </main>
-  </div>
-
-  <div id="contextMenu" hidden></div>
-  <div id="emojiPicker" hidden></div>
-  <div id="lightbox" hidden><img id="lightboxImg" alt="" /></div>
-
-  <div id="forwardModal" hidden>
-    <div class="modal-card">
-      <h3>Forward to…</h3>
-      <input id="forwardRoom" type="text" placeholder="room name" />
-      <div class="modal-actions">
-        <button id="forwardCancel" type="button" class="ghost">Cancel</button>
-        <button id="forwardGo" type="button">Send</button>
+<div id="app">
+  <aside id="sidebar">
+    <div class="side-head">
+      <div class="avatar" id="selfAvatar">?</div>
+      <div class="side-info">
+        <div class="side-name" id="selfName">You</div>
+        <div class="side-status" id="selfStatus">Offline</div>
       </div>
     </div>
-  </div>
+    <div class="section">
+      <div class="label">Members <span id="memberCount">0</span></div>
+      <ul id="members"></ul>
+    </div>
+    <div class="section">
+      <label class="label">Room</label>
+      <input id="room" value="lobby"/>
+      <label class="label">Nickname</label>
+      <input id="nickname"/>
+      <div class="row">
+        <button id="connectBtn">Connect</button>
+        <button id="disconnectBtn" disabled>Disconnect</button>
+      </div>
+    </div>
+    <div class="section">
+      <label class="label">Theme</label>
+      <select id="themeSelect">
+        <option value="whatsapp">WhatsApp</option>
+        <option value="telegram">Telegram</option>
+        <option value="discord">Discord</option>
+        <option value="glass">Liquid Glass</option>
+      </select>
+      <label class="label">Language</label>
+      <select id="langSelect">
+        <option value="en">English</option>
+        <option value="es">Español</option>
+      </select>
+      <label class="label">Font <span id="fontLabel">100%</span></label>
+      <input id="fontSize" type="range" min="85" max="130" value="100" step="5"/>
+    </div>
+  </aside>
 
-  <input id="imageInput" type="file" accept="image/*" hidden />
-  <input id="fileInput" type="file" hidden />
+  <main id="chat">
+    <header id="head">
+      <button id="sidebarToggle">☰</button>
+      <div class="avatar" id="roomAvatar">#</div>
+      <div class="info">
+        <div class="name" id="roomName">lobby</div>
+        <div class="sub" id="roomStatus">Tap connect</div>
+      </div>
+      <button id="starBtn" title="Starred">⭐</button>
+      <button id="searchBtn" title="Search (Ctrl+F)">🔍</button>
+    </header>
 
-  <div id="toasts"></div>
+    <div id="searchbar" hidden>
+      <input id="searchInput" placeholder="Search…"/>
+      <span id="searchCount"></span>
+      <button id="searchClose">✕</button>
+    </div>
 
-  <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
-  <script src="chat.js"></script>
+    <div id="selbar" hidden>
+      <button id="selClose">✕</button>
+      <span class="cnt" id="selCount">0 selected</span>
+      <div class="actions">
+        <button id="selStar" title="Star">⭐</button>
+        <button id="selCopy" title="Copy">📋</button>
+        <button id="selDelete" title="Delete">🗑️</button>
+      </div>
+    </div>
+
+    <div id="messages"></div>
+
+    <button id="scrollDown" hidden>↓<span id="unread"></span></button>
+
+    <div id="dropOverlay" hidden><div>📎 Drop to send</div></div>
+
+    <footer id="composer">
+      <div id="replyPreview" hidden>
+        <div class="rp-body">
+          <div class="rp-name"></div>
+          <div class="rp-text"></div>
+        </div>
+        <button id="replyClose" type="button">✕</button>
+      </div>
+      <form id="composerForm">
+        <button type="button" id="emojiBtn">😊</button>
+        <button type="button" id="attachBtn">📎</button>
+        <textarea id="text" rows="1" placeholder="Type a message…" disabled></textarea>
+        <button type="button" id="audioBtn">🎤</button>
+        <button type="submit" id="sendBtn" disabled>Send</button>
+      </form>
+      <div id="attachMenu" hidden>
+        <button type="button" data-a="image">🖼️ Image</button>
+        <button type="button" data-a="file">📄 Document</button>
+      </div>
+      <div id="mentions" hidden></div>
+    </footer>
+  </main>
+</div>
+
+<div id="ctx" hidden></div>
+<div id="emojiPicker" hidden></div>
+<div id="lightbox" hidden><img id="lightboxImg" alt=""/></div>
+<div id="toasts"></div>
+<input id="imageInput" type="file" accept="image/*" hidden/>
+<input id="fileInput" type="file" hidden/>
+
+<script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
+<script src="chat.js"></script>
 </body>
 </html>

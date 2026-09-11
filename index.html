@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="whatsapp">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MiniChat</title>
+  <link rel="stylesheet" href="themes.css" />
+</head>
+<body>
+  <header>
+    <h1>MiniChat</h1>
+    <input id="room" type="text" placeholder="room" value="lobby" />
+    <input id="nickname" type="text" placeholder="nickname" />
+    <button id="connectBtn">Connect</button>
+    <button id="disconnectBtn">Disconnect</button>
+    <select id="themeSelect" title="Theme">
+      <option value="whatsapp">WhatsApp</option>
+      <option value="telegram">Telegram</option>
+      <option value="discord">Discord</option>
+      <option value="glass">Liquid Glass</option>
+    </select>
+    <span id="status">Offline</span>
+  </header>
+
+  <main id="messages"></main>
+
+  <footer>
+    <form id="composer">
+      <input id="text" type="text" placeholder="Type a message…" autocomplete="off" />
+      <button type="button" id="imageBtn" title="Send image">🖼️</button>
+      <button type="button" id="audioBtn" title="Record audio">🎤</button>
+      <button type="submit" id="sendBtn">Send</button>
+    </form>
+    <input id="imageInput" type="file" accept="image/*" hidden />
+  </footer>
+
+  <div id="toasts"></div>
+
+  <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
+  <script src="chat.js"></script>
+</body>
+</html>

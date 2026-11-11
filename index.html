@@ -9,6 +9,51 @@
 <link rel="stylesheet" href="themes.css"/>
 </head>
 <body>
+
+<!-- ============ Join screen ============ -->
+<div id="joinScreen">
+  <div class="join-card">
+    <div class="join-brand">
+      <div class="join-logo">💬</div>
+      <h1>MiniChat</h1>
+      <p class="join-sub">Join a room to start chatting</p>
+    </div>
+    <div class="join-avatar-row">
+      <div class="avatar lg" id="joinAvatar">?</div>
+      <div class="join-avatar-btns">
+        <button type="button" id="joinAvatarPick">📷 Picture</button>
+        <button type="button" id="joinAvatarClear" hidden>Remove</button>
+      </div>
+    </div>
+    <label class="join-label" for="joinRoom" data-i18n="room">Room</label>
+    <input id="joinRoom" value="lobby" maxlength="32"/>
+    <label class="join-label" for="joinNick" data-i18n="nickname">Nickname</label>
+    <input id="joinNick" maxlength="32" placeholder="anon"/>
+    <button id="joinBtn" class="join-go" data-i18n="joinRoom">Join room</button>
+    <div class="join-hint" id="joinHint"></div>
+  </div>
+</div>
+
+<!-- ============ Crop viewfinder ============ -->
+<div id="cropView" hidden>
+  <div class="crop-card">
+    <h2 data-i18n="cropTitle">Crop your picture</h2>
+    <div class="crop-stage" id="cropStage">
+      <canvas id="cropCanvas" width="240" height="240"></canvas>
+      <div class="crop-ring"></div>
+    </div>
+    <div class="crop-controls">
+      <label class="crop-zoom"><span data-i18n="zoom">Zoom</span>
+        <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1"/>
+      </label>
+      <div class="crop-actions">
+        <button type="button" id="cropCancel" data-i18n="cancel">Cancel</button>
+        <button type="button" id="cropOk" data-i18n="usePicture">Use picture</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="app">
   <aside id="sidebar">
     <div class="side-head">
@@ -22,25 +67,49 @@
       <div class="label">Members <span id="memberCount">0</span></div>
       <ul id="members"></ul>
     </div>
+    <div class="section" id="bansSection" hidden>
+      <div class="label">Bans <span id="banCount">0</span></div>
+      <ul id="bans"></ul>
+    </div>
     <div class="section">
-      <label class="label">Room</label>
+      <label class="label" data-i18n="room">Room</label>
       <input id="room" value="lobby"/>
-      <label class="label">Nickname</label>
+      <label class="label" data-i18n="nickname">Nickname</label>
       <input id="nickname"/>
       <div class="row">
-        <button id="connectBtn">Connect</button>
-        <button id="disconnectBtn" disabled>Disconnect</button>
+        <button id="connectBtn" data-i18n="connect">Connect</button>
+        <button id="disconnectBtn" data-i18n="disconnect" disabled>Disconnect</button>
       </div>
     </div>
     <div class="section">
-      <label class="label">Theme</label>
+      <label class="label" data-i18n="profile">Profile</label>
+      <div class="row">
+        <button id="changeAvatar" data-i18n="changeAvatar">📷 Picture</button>
+        <button id="removeAvatar" data-i18n="removeAvatar" hidden>Remove</button>
+      </div>
+    </div>
+    <div class="section">
+      <label class="ghost"><input type="checkbox" id="ghost"/><span>👻 <span data-i18n="ghost">Ghost mode</span></span></label>
+      <button id="p2pBtn" data-i18n="p2p">P2P chat</button>
+      <button id="clearHist" data-i18n="clearHist">Clear history</button>
+    </div>
+    <div class="section">
+      <label class="label" data-i18n="exportImport">Export / Import</label>
+      <div class="row">
+        <button id="exportJson" data-i18n="exportJson">JSON</button>
+        <button id="exportTxt" data-i18n="exportTxt">TXT</button>
+        <button id="importBtn" data-i18n="import">Import</button>
+      </div>
+    </div>
+    <div class="section">
+      <label class="label" data-i18n="theme">Theme</label>
       <select id="themeSelect">
         <option value="whatsapp">WhatsApp</option>
         <option value="telegram">Telegram</option>
         <option value="discord">Discord</option>
         <option value="glass">Liquid Glass</option>
       </select>
-      <label class="label">Language</label>
+      <label class="label" data-i18n="language">Language</label>
       <select id="langSelect">
         <option value="en">English</option>
         <option value="es">Español</option>
@@ -63,7 +132,7 @@
     </header>
 
     <div id="searchbar" hidden>
-      <input id="searchInput" placeholder="Search…"/>
+      <input id="searchInput" placeholder="Search…" data-i18n-ph="searchPh"/>
       <span id="searchCount"></span>
       <button id="searchClose">✕</button>
     </div>
@@ -95,27 +164,36 @@
       <form id="composerForm">
         <button type="button" id="emojiBtn">😊</button>
         <button type="button" id="attachBtn">📎</button>
-        <textarea id="text" rows="1" placeholder="Type a message…" disabled></textarea>
+        <textarea id="text" rows="1" placeholder="Type a message…" data-i18n-ph="typeMsg" disabled></textarea>
         <button type="button" id="audioBtn">🎤</button>
         <button type="submit" id="sendBtn" disabled>Send</button>
       </form>
       <div id="attachMenu" hidden>
         <button type="button" data-a="image">🖼️ Image</button>
+        <button type="button" data-a="sticker">🌟 <span data-i18n="sticker">Sticker</span></button>
         <button type="button" data-a="file">📄 Document</button>
+        <button type="button" data-a="app">🧩 <span data-i18n="apps">Mini apps</span></button>
       </div>
       <div id="mentions" hidden></div>
     </footer>
   </main>
 </div>
 
+<div id="appDlg" hidden></div>
+<div id="p2pDlg" hidden></div>
 <div id="ctx" hidden></div>
 <div id="emojiPicker" hidden></div>
 <div id="lightbox" hidden><img id="lightboxImg" alt=""/></div>
 <div id="toasts"></div>
 <input id="imageInput" type="file" accept="image/*" hidden/>
 <input id="fileInput" type="file" hidden/>
+<input id="stickerInput" type="file" accept="image/*" hidden/>
+<input id="importInput" type="file" accept=".json,application/json" hidden/>
+<input id="avatarChangeInput" type="file" accept="image/*" hidden/>
 
 <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
+<script src="apps.js"></script>
+<script src="p2p.js"></script>
 <script src="chat.js"></script>
 </body>
 </html>

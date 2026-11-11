@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<!-- ============ Join screen ============ -->
+<!-- ============ JOIN SCREEN ============ -->
 <div id="joinScreen">
   <div class="join-card">
     <div class="join-brand">
@@ -18,23 +18,26 @@
       <h1>MiniChat</h1>
       <p class="join-sub">Join a room to start chatting</p>
     </div>
+
     <div class="join-avatar-row">
       <div class="avatar lg" id="joinAvatar">?</div>
       <div class="join-avatar-btns">
-        <button type="button" id="joinAvatarPick">📷 Picture</button>
-        <button type="button" id="joinAvatarClear" hidden>Remove</button>
+        <button type="button" id="joinAvatarPick" data-i18n="pickPicture">📷 Picture</button>
+        <button type="button" id="joinAvatarClear" data-i18n="removeAvatar" hidden>Remove</button>
       </div>
     </div>
+
     <label class="join-label" for="joinRoom" data-i18n="room">Room</label>
-    <input id="joinRoom" value="lobby" maxlength="32"/>
+    <input id="joinRoom" value="lobby" maxlength="32" autocomplete="off"/>
+
     <label class="join-label" for="joinNick" data-i18n="nickname">Nickname</label>
-    <input id="joinNick" maxlength="32" placeholder="anon"/>
+    <input id="joinNick" maxlength="32" autocomplete="off" placeholder="anon"/>
+
     <button id="joinBtn" class="join-go" data-i18n="joinRoom">Join room</button>
-    <div class="join-hint" id="joinHint"></div>
   </div>
 </div>
 
-<!-- ============ Crop viewfinder ============ -->
+<!-- ============ CROP VIEWFINDER ============ -->
 <div id="cropView" hidden>
   <div class="crop-card">
     <h2 data-i18n="cropTitle">Crop your picture</h2>
@@ -43,7 +46,8 @@
       <div class="crop-ring"></div>
     </div>
     <div class="crop-controls">
-      <label class="crop-zoom"><span data-i18n="zoom">Zoom</span>
+      <label class="crop-zoom">
+        <span data-i18n="zoom">Zoom</span>
         <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1"/>
       </label>
       <div class="crop-actions">
@@ -54,6 +58,7 @@
   </div>
 </div>
 
+<!-- ============ APP ============ -->
 <div id="app">
   <aside id="sidebar">
     <div class="side-head">
@@ -63,14 +68,17 @@
         <div class="side-status" id="selfStatus">Offline</div>
       </div>
     </div>
+
     <div class="section">
       <div class="label">Members <span id="memberCount">0</span></div>
       <ul id="members"></ul>
     </div>
+
     <div class="section" id="bansSection" hidden>
-      <div class="label">Bans <span id="banCount">0</span></div>
+      <div class="label" data-i18n="bans">Bans <span id="banCount">0</span></div>
       <ul id="bans"></ul>
     </div>
+
     <div class="section">
       <label class="label" data-i18n="room">Room</label>
       <input id="room" value="lobby"/>
@@ -81,6 +89,7 @@
         <button id="disconnectBtn" data-i18n="disconnect" disabled>Disconnect</button>
       </div>
     </div>
+
     <div class="section">
       <label class="label" data-i18n="profile">Profile</label>
       <div class="row">
@@ -88,11 +97,12 @@
         <button id="removeAvatar" data-i18n="removeAvatar" hidden>Remove</button>
       </div>
     </div>
+
     <div class="section">
       <label class="ghost"><input type="checkbox" id="ghost"/><span>👻 <span data-i18n="ghost">Ghost mode</span></span></label>
-      <button id="p2pBtn" data-i18n="p2p">P2P chat</button>
       <button id="clearHist" data-i18n="clearHist">Clear history</button>
     </div>
+
     <div class="section">
       <label class="label" data-i18n="exportImport">Export / Import</label>
       <div class="row">
@@ -101,6 +111,7 @@
         <button id="importBtn" data-i18n="import">Import</button>
       </div>
     </div>
+
     <div class="section">
       <label class="label" data-i18n="theme">Theme</label>
       <select id="themeSelect">
@@ -169,31 +180,28 @@
         <button type="submit" id="sendBtn" disabled>Send</button>
       </form>
       <div id="attachMenu" hidden>
-        <button type="button" data-a="image">🖼️ Image</button>
+        <button type="button" data-a="image">🖼️ <span data-i18n="image">Image</span></button>
         <button type="button" data-a="sticker">🌟 <span data-i18n="sticker">Sticker</span></button>
-        <button type="button" data-a="file">📄 Document</button>
-        <button type="button" data-a="app">🧩 <span data-i18n="apps">Mini apps</span></button>
+        <button type="button" data-a="file">📄 <span data-i18n="file">Document</span></button>
       </div>
       <div id="mentions" hidden></div>
     </footer>
   </main>
 </div>
 
-<div id="appDlg" hidden></div>
-<div id="p2pDlg" hidden></div>
 <div id="ctx" hidden></div>
 <div id="emojiPicker" hidden></div>
 <div id="lightbox" hidden><img id="lightboxImg" alt=""/></div>
 <div id="toasts"></div>
+
 <input id="imageInput" type="file" accept="image/*" hidden/>
-<input id="fileInput" type="file" hidden/>
 <input id="stickerInput" type="file" accept="image/*" hidden/>
+<input id="fileInput" type="file" hidden/>
 <input id="importInput" type="file" accept=".json,application/json" hidden/>
 <input id="avatarChangeInput" type="file" accept="image/*" hidden/>
+<input id="joinAvatarInput" type="file" accept="image/*" hidden/>
 
 <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
-<script src="apps.js"></script>
-<script src="p2p.js"></script>
 <script src="chat.js"></script>
 </body>
 </html>

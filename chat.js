@@ -159,6 +159,23 @@ function t(k,v){let s=(TR[S.lang]&&TR[S.lang][k])||k;if(v)for(const [a,b] of Obj
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function inits(n){if(!n)return'?';const p=String(n).trim().split(/\s+/);return((p[0][0]||'?')+(p[1]?p[1][0]:'')).toUpperCase().slice(0,2)}
+// Nicknames: letters (any language), digits, "_" and "-" only. Same set that @mentions understand.
+const NICK_BAD=/[^\p{L}\p{N}_-]+/gu;
+function cleanNick(v){return String(v||'').replace(NICK_BAD,'').slice(0,32)}
+function attachNickFilter(el){
+  el.addEventListener('keydown',e=>{
+    if(e.ctrlKey||e.metaKey||e.altKey||[...e.key].length!==1)return;   // shortcuts, arrows, Enter, Backspace…
+    if(/[^\p{L}\p{N}_-]/u.test(e.key))e.preventDefault();
+  });
+  el.addEventListener('input',()=>{            // also catches paste / mobile keyboards
+    const v=el.value;
+    if(!/[^\p{L}\p{N}_-]/u.test(v))return;
+    const pos=el.selectionStart||0;
+    const keep=v.slice(0,pos).replace(NICK_BAD,'').length;
+    el.value=v.replace(NICK_BAD,'');
+    try{el.setSelectionRange(keep,keep)}catch(e){}
+  });
+}
 function colorFor(id){let h=0;for(let i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))|0;return`hsl(${Math.abs(h)%360},55%,48%)`}
 function fmtTime(ts){return new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
 function fmtDate(ts){
@@ -220,7 +237,7 @@ function inline(s){
   s=s.replace(/(^|\W)_([^_\n]+)_(?=\W|$)/g,'$1<em>$2</em>');
   s=s.replace(/(^|\W)~([^~\n]+)~(?=\W|$)/g,'$1<del>$2</del>');
   s=s.replace(/\u0000(\d+)\u0000/g,(_,i)=>`<a href="${links[i]}" target="_blank" rel="noopener noreferrer">${links[i]}</a>`);
-  s=s.replace(/(^|\s)@([\w-]{1,32})/g,'$1<span class="mention">@$2</span>');
+  s=s.replace(/(^|\s)@([\p{L}\p{N}_-]{1,32})/gu,'$1<span class="mention">@$2</span>');
   return s;
 }
 
@@ -449,7 +466,7 @@ function handleCmd(text){
   if(c==='/help'){sys(t('help'));return true}
   if(c==='/clear'){clearHistory();return true}
   if(c==='/nick'&&p[1]){
-    S.nick=p[1].slice(0,32);D.nickname.value=S.nick;
+    S.nick=cleanNick(p[1]);D.nickname.value=S.nick;
     localStorage.setItem('mc_nick',S.nick);
     updateSelf();sys(t('nickChanged',{nick:S.nick}));
     return true;
@@ -528,7 +545,7 @@ async function connect(){
   requestNotif();
   S.room=cleanRoom(D.room.value);
   D.room.value=S.room;
-  S.nick=(D.nickname.value.trim()||'anon-'+Math.random().toString(36).slice(2,6)).slice(0,32);
+  S.nick=cleanNick(D.nickname.value)||'anon-'+Math.random().toString(36).slice(2,6);
   D.nickname.value=S.nick;
   S.topic=CFG.PREFIX+S.room;
 
@@ -654,7 +671,7 @@ function incoming(payload){
   }
   if(rateLimited(m.clientId))return;
   if(isBanned(m.clientId))return;
-  m.nickname=String(m.nickname||'anon').slice(0,32);
+  m.nickname=cleanNick(m.nickname)||'anon';   // older clients may still send spaces
   m.ts=Date.now();
 
   {
@@ -1310,7 +1327,7 @@ function updateMentions(){
   const text=D.text.value;
   const pos=D.text.selectionStart;
   const upto=text.slice(0,pos);
-  const m=upto.match(/@([\w-]{0,32})$/);
+  const m=upto.match(/@([\p{L}\p{N}_-]{0,32})$/u);
   if(!m){D.mentions.hidden=true;S.mentionIdx=-1;return}
   const q=m[1].toLowerCase();
   const cands=[];
@@ -1334,7 +1351,7 @@ function insertMention(nick){
   const text=D.text.value;
   const pos=D.text.selectionStart;
   const upto=text.slice(0,pos);
-  const m=upto.match(/@([\w-]{0,32})$/);
+  const m=upto.match(/@([\p{L}\p{N}_-]{0,32})$/u);
   if(!m)return;
   const before=text.slice(0,m.index);
   const after=text.slice(pos);
@@ -1505,8 +1522,9 @@ function initCrop(){
 }
 function initJoin(){
   D.joinRoom.value=localStorage.getItem('mc_room')||'lobby';
-  D.joinNick.value=localStorage.getItem('mc_nick')||'';
+  D.joinNick.value=cleanNick(localStorage.getItem('mc_nick'));
   renderJoinAvatar();
+  attachNickFilter(D.joinNick);
   D.joinNick.oninput=renderJoinAvatar;
   D.joinAvatarPick.onclick=()=>D.joinAvatarInput.click();
   D.joinAvatarClear.onclick=()=>{
@@ -1520,7 +1538,7 @@ function initJoin(){
   };
   D.joinBtn.onclick=()=>{
     const room=cleanRoom(D.joinRoom.value);
-    const nick=(D.joinNick.value.trim()||'anon-'+Math.random().toString(36).slice(2,6)).slice(0,32);
+    const nick=cleanNick(D.joinNick.value)||'anon-'+Math.random().toString(36).slice(2,6);
     D.joinRoom.value=room;D.joinNick.value=nick;
     D.room.value=room;D.nickname.value=nick;
     S.nick=nick;S.room=room;
@@ -1610,7 +1628,7 @@ function wire(){
   D.room.onkeydown=e=>{if(e.key==='Enter'&&!D.room.disabled)connect()};
   D.nickname.onkeydown=e=>{if(e.key==='Enter'){D.nickname.blur();if(!S.clients.length&&!S.connecting)connect()}};
   D.nickname.onchange=()=>{
-    const n=D.nickname.value.trim().slice(0,32);
+    const n=cleanNick(D.nickname.value);
     if(!n){D.nickname.value=S.nick;return}
     if(n===S.nick)return;
     S.nick=n;D.nickname.value=n;
@@ -1619,6 +1637,7 @@ function wire(){
     if(connected()){pub({type:'presence'});sys(t('nickChanged',{nick:n}))}
   };
   D.selfAvatar.onclick=()=>D.avatarChangeInput.click();
+  attachNickFilter(D.nickname);
   initSections();
 
   D.composerForm.onsubmit=(e)=>{e.preventDefault();sendText()};
@@ -1893,7 +1912,7 @@ function init(){
   initTheme();initLang();initFont();initCrop();initJoin();wire();
 
   D.room.value=localStorage.getItem('mc_room')||'lobby';
-  D.nickname.value=localStorage.getItem('mc_nick')||'';
+  D.nickname.value=cleanNick(localStorage.getItem('mc_nick'));
   try{localStorage.removeItem('mc_ghost')}catch(e){}
   S.nick=D.nickname.value;
 

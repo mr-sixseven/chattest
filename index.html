@@ -62,72 +62,78 @@
 <div id="app">
   <aside id="sidebar">
     <div class="side-head">
-      <div class="avatar" id="selfAvatar">?</div>
+      <div class="avatar" id="selfAvatar" title="📷">?</div>
       <div class="side-info">
         <div class="side-name" id="selfName">You</div>
-        <div class="side-status" id="selfStatus">Offline</div>
+        <div class="side-status"><span class="conn-dot" id="connDot"></span><span id="selfStatus">Offline</span></div>
       </div>
     </div>
 
-    <div class="section">
-      <div class="label">Members <span id="memberCount">0</span></div>
-      <ul id="members"></ul>
-    </div>
-
-    <div class="section" id="bansSection" hidden>
-      <div class="label" data-i18n="bans">Bans <span id="banCount">0</span></div>
-      <ul id="bans"></ul>
-    </div>
-
-    <div class="section">
-      <label class="label" data-i18n="room">Room</label>
-      <input id="room" value="lobby"/>
-      <label class="label" data-i18n="nickname">Nickname</label>
-      <input id="nickname"/>
-      <div class="row">
-        <button id="connectBtn" data-i18n="connect">Connect</button>
-        <button id="disconnectBtn" data-i18n="disconnect" disabled>Disconnect</button>
+    <details class="sec" id="secConn" open>
+      <summary><span data-i18n="connection">Connection</span></summary>
+      <div class="sec-body">
+        <label class="field"><span class="field-lbl" data-i18n="room">Room</span>
+          <input id="room" value="lobby" maxlength="32" autocomplete="off"/></label>
+        <label class="field"><span class="field-lbl" data-i18n="nickname">Nickname</span>
+          <input id="nickname" maxlength="32" autocomplete="off"/></label>
+        <div class="row">
+          <button id="connectBtn" data-i18n="connect">Connect</button>
+          <button id="disconnectBtn" class="secondary" data-i18n="disconnect" disabled>Disconnect</button>
+        </div>
       </div>
-    </div>
+    </details>
 
-    <div class="section">
-      <label class="label" data-i18n="profile">Profile</label>
-      <div class="row">
-        <button id="changeAvatar" data-i18n="changeAvatar">📷 Picture</button>
-        <button id="removeAvatar" data-i18n="removeAvatar" hidden>Remove</button>
+    <details class="sec" id="secMembers" open>
+      <summary><span data-i18n="members">Members</span><span class="count" id="memberCount">0</span></summary>
+      <div class="sec-body"><ul id="members"></ul></div>
+    </details>
+
+    <details class="sec" id="bansSection" open hidden>
+      <summary><span data-i18n="bans">Bans</span><span class="count" id="banCount">0</span></summary>
+      <div class="sec-body"><ul id="bans"></ul></div>
+    </details>
+
+    <details class="sec" id="secProfile">
+      <summary><span data-i18n="profile">Profile</span></summary>
+      <div class="sec-body">
+        <div class="row">
+          <button id="changeAvatar" class="secondary" data-i18n="changeAvatar">📷 Picture</button>
+          <button id="removeAvatar" class="secondary" data-i18n="removeAvatar" hidden>Remove</button>
+        </div>
       </div>
-    </div>
+    </details>
 
-    <div class="section">
-      <label class="ghost"><input type="checkbox" id="ghost"/><span>👻 <span data-i18n="ghost">Ghost mode</span></span></label>
-      <button id="clearHist" data-i18n="clearHist">Clear history</button>
-    </div>
-
-    <div class="section">
-      <label class="label" data-i18n="exportImport">Export / Import</label>
-      <div class="row">
-        <button id="exportJson" data-i18n="exportJson">JSON</button>
-        <button id="exportTxt" data-i18n="exportTxt">TXT</button>
-        <button id="importBtn" data-i18n="import">Import</button>
+    <details class="sec" id="secHistory">
+      <summary><span data-i18n="history">History</span></summary>
+      <div class="sec-body">
+        <div class="row">
+          <button id="exportJson" class="secondary" data-i18n="exportJson">JSON</button>
+          <button id="exportTxt" class="secondary" data-i18n="exportTxt">TXT</button>
+          <button id="importBtn" class="secondary" data-i18n="import">Import</button>
+        </div>
+        <button id="clearHist" class="danger" data-i18n="clearHist">Clear history</button>
       </div>
-    </div>
+    </details>
 
-    <div class="section">
-      <label class="label" data-i18n="theme">Theme</label>
-      <select id="themeSelect">
-        <option value="whatsapp">WhatsApp</option>
-        <option value="telegram">Telegram</option>
-        <option value="discord">Discord</option>
-        <option value="glass">Liquid Glass</option>
-      </select>
-      <label class="label" data-i18n="language">Language</label>
-      <select id="langSelect">
-        <option value="en">English</option>
-        <option value="es">Español</option>
-      </select>
-      <label class="label">Font <span id="fontLabel">100%</span></label>
-      <input id="fontSize" type="range" min="85" max="130" value="100" step="5"/>
-    </div>
+    <details class="sec" id="secLook">
+      <summary><span data-i18n="appearance">Appearance</span></summary>
+      <div class="sec-body">
+        <label class="field"><span class="field-lbl" data-i18n="theme">Theme</span>
+          <select id="themeSelect">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="telegram">Telegram</option>
+            <option value="discord">Discord</option>
+            <option value="glass">Liquid Glass</option>
+          </select></label>
+        <label class="field"><span class="field-lbl" data-i18n="language">Language</span>
+          <select id="langSelect">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+          </select></label>
+        <label class="field"><span class="field-lbl"><span data-i18n="font">Font</span><span id="fontLabel">100%</span></span>
+          <input id="fontSize" type="range" min="85" max="130" value="100" step="5"/></label>
+      </div>
+    </details>
   </aside>
 
   <main id="chat">
@@ -201,7 +207,25 @@
 <input id="avatarChangeInput" type="file" accept="image/*" hidden/>
 <input id="joinAvatarInput" type="file" accept="image/*" hidden/>
 
-<script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
-<script src="chat.js"></script>
+<script>
+// Load the MQTT library (trying a few CDNs in case one is blocked or down), then start the chat.
+(function(){
+  var urls=[
+    'https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js',
+    'https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.3.5/mqtt.min.js'
+  ];
+  function boot(){var s=document.createElement('script');s.src='chat.js';document.body.appendChild(s)}
+  function load(i){
+    if(typeof mqtt!=='undefined'||i>=urls.length)return boot();
+    var s=document.createElement('script');
+    s.src=urls[i];
+    s.onload=function(){typeof mqtt!=='undefined'?boot():load(i+1)};
+    s.onerror=function(){load(i+1)};
+    document.body.appendChild(s);
+  }
+  load(0);
+})();
+</script>
 </body>
 </html>

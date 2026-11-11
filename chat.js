@@ -6,7 +6,7 @@ const CFG={
   PREFIX:'minichat/v2/',
   MAX_MSG:2000, MAX_IMG:200, MAX_AUDIO:200, MAX_FILE:360, MAX_STICKER:400,
   HIST_MAX:300, MAX_KEEP:400, MAX_CHARS:500000,
-  PRESENCE:15000, PRESENCE_TTL:45000, TYPING_TTL:2500,
+  PRESENCE:15000, PRESENCE_TTL:45000, TYPING_TTL:2500, CONNECT_MS:8000, SEEN_MAX:3000,
   RATE_N:80, RATE_MS:5000,
   AVATAR_MAX:60000, CROP_SIZE:240, AVATAR_OUT:128
 };
@@ -31,11 +31,8 @@ const TR={
     room:'Room',nickname:'Nickname',connect:'Connect',disconnect:'Disconnect',
     theme:'Theme',language:'Language',font:'Font',
     typeMsg:'Type a message…',searchPh:'Search…',
-    ghost:'Ghost mode',ghostSub:'Invisible',
-    ghostOn:'👻 Ghost mode on: you can read, nobody can see you',
-    ghostOff:'You are visible again',
-    ghostBlock:'Ghost mode is read-only. Turn it off to interact',
-    ghostRO:'👻 Ghost mode (read-only)',
+    connection:'Connection',history:'History',appearance:'Appearance',
+    mqttMissing:'Chat library failed to load. Check your connection and reload',
     clearHist:'Clear history',clearAsk:'Delete the saved history of this chat?',
     joinRoom:'Join room',cropTitle:'Crop your picture',zoom:'Zoom',usePicture:'Use picture',
     profile:'Profile',changeAvatar:'📷 Picture',removeAvatar:'Remove',pickPicture:'📷 Picture',
@@ -73,11 +70,8 @@ const TR={
     room:'Sala',nickname:'Apodo',connect:'Conectar',disconnect:'Desconectar',
     theme:'Tema',language:'Idioma',font:'Fuente',
     typeMsg:'Escribe un mensaje…',searchPh:'Buscar…',
-    ghost:'Modo fantasma',ghostSub:'Invisible',
-    ghostOn:'👻 Modo fantasma: puedes leer y nadie te ve',
-    ghostOff:'Vuelves a ser visible',
-    ghostBlock:'El modo fantasma es solo lectura. Desactívalo para interactuar',
-    ghostRO:'👻 Modo fantasma (solo lectura)',
+    connection:'Conexión',history:'Historial',appearance:'Apariencia',
+    mqttMissing:'No se pudo cargar la librería del chat. Revisa tu conexión y recarga',
     clearHist:'Borrar historial',clearAsk:'¿Borrar el historial guardado de este chat?',
     joinRoom:'Unirse',cropTitle:'Recorta tu foto',zoom:'Zoom',usePicture:'Usar foto',
     profile:'Perfil',changeAvatar:'📷 Foto',removeAvatar:'Quitar',pickPicture:'📷 Foto',
@@ -103,7 +97,7 @@ const QUICK=['👍','❤️','😂','😮','😢','🙏'];
 const OKEMOJI=/^[\p{Extended_Pictographic}\u200d\ufe0f]{1,12}$/u;
 
 const S={
-  client:null, topic:'', room:'lobby', nick:'',
+  topic:'', room:'lobby', nick:'',
   cid:(()=>{
     let c=localStorage.getItem('mc_cid');
     if(!c){c='mc_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-3);localStorage.setItem('mc_cid',c)}
@@ -116,15 +110,14 @@ const S={
   sel:new Set(), selMode:false, starFilter:false,
   mentionIdx:-1, mentionItems:[], dragging:0,
   rl:new Map(), toRead:[], announced:false,
-  ghost:localStorage.getItem('mc_ghost')==='1',
   connecting:false, scope:'', dirty:new Set(), dt:0,
-  mqid:'mq_'+Math.random().toString(36).slice(2,12)+Date.now().toString(36),
+  clients:[], connToken:0, failTimer:null, seen:new Set(), lastHello:0,
   avatar:localStorage.getItem('mc_avatar')||null,
   bans:new Map()
 };
 
 const $=(s)=>document.querySelector(s);
-const connected=()=>!!(S.client&&S.client.connected);
+const connected=()=>S.clients.some(x=>x.c&&x.c.connected);
 
 const D={
   sidebar:$('#sidebar'), sidebarToggle:$('#sidebarToggle'),
@@ -149,7 +142,7 @@ const D={
   imageInput:$('#imageInput'), stickerInput:$('#stickerInput'), fileInput:$('#fileInput'),
   ctx:$('#ctx'), emojiPicker:$('#emojiPicker'),
   lightbox:$('#lightbox'), lightboxImg:$('#lightboxImg'), toasts:$('#toasts'),
-  ghost:$('#ghost'), clearHist:$('#clearHist'),
+  clearHist:$('#clearHist'), connDot:$('#connDot'),
   changeAvatar:$('#changeAvatar'), removeAvatar:$('#removeAvatar'),
   avatarChangeInput:$('#avatarChangeInput'),
   exportJson:$('#exportJson'), exportTxt:$('#exportTxt'),
@@ -203,21 +196,12 @@ function avatarEl(nick,cid,dataUrl,sm){
 
 // ===== composer state =====
 function syncComposer(){
-  const on=connected()&&!S.ghost;
+  const on=connected();
   D.text.disabled=!on;D.sendBtn.disabled=!on;
-  D.attachBtn.disabled=D.audioBtn.disabled=D.emojiBtn.disabled=S.ghost;
-  D.text.placeholder=S.ghost?t('ghostRO'):t('typeMsg');
+  D.attachBtn.disabled=D.audioBtn.disabled=D.emojiBtn.disabled=!on;
+  D.text.placeholder=t('typeMsg');
 }
-function canAct(){if(S.ghost){toast(t('ghostBlock'),'info',1800);return false}return true}
-
-function setGhost(on,quiet){
-  if(on===S.ghost)return;
-  if(on){pub({type:'leave'});pub({type:'presence',offline:true});S.ghost=true}
-  else{S.ghost=false;if(connected()){pub({type:'join',avatar:S.avatar||undefined});pub({type:'presence'});pub({type:'hello'})}}
-  localStorage.setItem('mc_ghost',on?'1':'0');D.ghost.checked=on;
-  updateSelf();renderMembers();syncComposer();
-  if(!quiet)sys(t(on?'ghostOn':'ghostOff'));
-}
+function canAct(){if(!connected()){toast(t('noConn'),'error',1800);return false}return true}
 
 // ===== rich text =====
 function renderRich(raw){
@@ -385,6 +369,19 @@ function renderBans(){
   D.banCount.textContent=n;
 }
 
+// ===== Sidebar sections =====
+function initSections(){
+  let st={};
+  try{st=JSON.parse(localStorage.getItem('mc_sec')||'{}')||{}}catch(e){st={}}
+  document.querySelectorAll('#sidebar details.sec').forEach(d=>{
+    if(typeof st[d.id]==='boolean')d.open=st[d.id];
+    d.addEventListener('toggle',()=>{
+      st[d.id]=d.open;
+      try{localStorage.setItem('mc_sec',JSON.stringify(st))}catch(e){}
+    });
+  });
+}
+
 // ===== Theme / lang / font =====
 function initTheme(){
   S.theme=localStorage.getItem('mc_theme')||'whatsapp';
@@ -412,9 +409,9 @@ function refreshI18n(){
   document.documentElement.lang=S.lang;
   document.querySelectorAll('[data-i18n]').forEach(e=>{e.textContent=t(e.dataset.i18n)});
   document.querySelectorAll('[data-i18n-ph]').forEach(e=>{e.placeholder=t(e.dataset.i18nPh)});
-  status(connected()?t('online'):t('tapConnect'));
+  status(connLabel());
   D.selfName.textContent=S.nick||t('you');
-  D.selfStatus.textContent=S.ghost?'👻 '+t('ghostSub'):(connected()?t('online'):t('offline'));
+  D.selfStatus.textContent=connected()?t('online'):(S.connecting?t('connecting'):(S.clients.length?t('reconnecting'):t('offline')));
   D.sendBtn.textContent=S.editingId?'✓':t('send');
   syncComposer();
 }
@@ -500,13 +497,39 @@ function handleBanCmd(p,c){
 }
 
 // ===== MQTT =====
-function connect(){
-  if(S.client||S.connecting)return;
-  if(typeof mqtt==='undefined'){toast('MQTT library failed to load','error',6000);return}
+// We connect to every broker in CFG.BROKERS at the same time and publish on all of
+// them. Each message carries a unique id, so duplicates are dropped on receipt.
+// That way two people in the same room always meet, even if one of them can only
+// reach a single broker.
+function connLabel(){
+  if(connected())return t('online');
+  if(S.connecting)return t('connecting');
+  if(S.clients.length)return t('reconnecting');
+  return t('tapConnect');
+}
+function syncConn(){
+  const busy=S.connecting||S.clients.length>0;
+  D.connectBtn.disabled=busy;
+  D.disconnectBtn.disabled=!busy;
+  D.room.disabled=busy;
+  D.connDot.className='conn-dot'+(connected()?' on':(busy?' wait':''));
+}
+function refreshConn(){
+  syncConn();syncComposer();
+  if(connected())renderTyping();else status(connLabel());
+  D.selfStatus.textContent=connected()?t('online'):(S.connecting?t('connecting'):(S.clients.length?t('reconnecting'):t('offline')));
+}
+function cleanRoom(v){
+  return String(v||'lobby').trim().replace(/[^\p{L}\p{N}_-]+/gu,'-').slice(0,32)||'lobby';
+}
+async function connect(){
+  if(S.clients.length||S.connecting)return;
+  if(typeof mqtt==='undefined'){toast(t('mqttMissing'),'error',7000);return}
   requestNotif();
-  S.room=(D.room.value||'lobby').trim().replace(/[^\p{L}\p{N}_-]+/gu,'-').slice(0,32)||'lobby';
+  S.room=cleanRoom(D.room.value);
   D.room.value=S.room;
   S.nick=(D.nickname.value.trim()||'anon-'+Math.random().toString(36).slice(2,6)).slice(0,32);
+  D.nickname.value=S.nick;
   S.topic=CFG.PREFIX+S.room;
 
   loadBans();
@@ -517,107 +540,144 @@ function connect(){
     return;
   }
 
-  switchScope('room:'+S.room);
-  S.connecting=true;D.connectBtn.disabled=true;
+  const token=++S.connToken;
+  S.connecting=true;
   localStorage.setItem('mc_room',S.room);localStorage.setItem('mc_nick',S.nick);
   D.roomName.textContent=S.room;
   D.roomAvatar.textContent='#'+S.room.slice(0,1).toUpperCase();
   D.roomAvatar.style.background=colorFor(S.room);
-  updateSelf();renderBans();
+  updateSelf();refreshConn();
 
-  let i=0;
-  function next(){
-    if(i>=CFG.BROKERS.length){
-      S.connecting=false;D.connectBtn.disabled=false;
-      status(t('noBroker'));toast(t('noBroker'),'error',6000);
-      return;
-    }
-    const b=CFG.BROKERS[i++];
-    status(t('connecting'));
-    const c=mqtt.connect(b,{clientId:S.mqid,clean:true,reconnectPeriod:5000,connectTimeout:10000,keepalive:30});
-    let ok=false,failed=false;
-    const fail=()=>{if(ok||failed)return;failed=true;c.end(true);next()};
+  // Load the saved history BEFORE going online, otherwise it would wipe the
+  // "joined" line and anything that arrives while it loads.
+  try{await switchScope('room:'+S.room)}catch(e){}
+  if(token!==S.connToken)return;
+  renderBans();
 
+  const clients=[];
+  S.clients=clients;
+  refreshConn();
+  clearTimeout(S.failTimer);
+  S.failTimer=setTimeout(()=>{
+    if(token!==S.connToken||connected()||S.announced)return;
+    stopClients(false);
+    S.connecting=false;S.announced=false;
+    refreshConn();status(t('noBroker'));
+    toast(t('noBroker'),'error',6000);
+  },CFG.CONNECT_MS+2500);
+
+  CFG.BROKERS.forEach(url=>{
+    let c;
+    try{
+      c=mqtt.connect(url,{
+        clientId:'mq_'+Math.random().toString(36).slice(2,12)+Date.now().toString(36),
+        clean:true,reconnectPeriod:4000,connectTimeout:CFG.CONNECT_MS,keepalive:30
+      });
+    }catch(e){return}
+    clients.push({url,c});
     c.on('connect',()=>{
-      ok=true;S.client=c;status(t('online'));
-      D.connectBtn.disabled=true;D.disconnectBtn.disabled=false;
-      S.connecting=false;syncComposer();
-      updateSelf();
+      if(token!==S.connToken)return;
       c.subscribe(S.topic,{qos:0},err=>{
-        if(!err){
-          if(!S.announced){
-            S.announced=true;
-            sys(t('joined',{room:S.room,nick:S.nick}));
-            pub({type:'join',avatar:S.avatar||undefined});
-          }
-          pub({type:'presence'});pub({type:'hello'});
-          clearInterval(S.presenceTimer);clearInterval(S.sweepTimer);
-          S.presenceTimer=setInterval(()=>pub({type:'presence'}),CFG.PRESENCE);
-          S.sweepTimer=setInterval(sweep,3000);
-          renderMembers();renderBans();
-        }
+        if(err||token!==S.connToken)return;
+        onBrokerUp();
       });
     });
-    c.on('message',(tp,p)=>{if(tp===S.topic)incoming(p)});
-    c.on('error',()=>fail());
-    c.on('close',()=>{
-      if(!ok){fail();return}
-      if(S.client===c){status(t('offline'));syncComposer()}
-    });
-    c.on('reconnect',()=>status(t('reconnecting')));
+    c.on('message',(tp,p)=>{if(token===S.connToken&&tp===S.topic)incoming(p)});
+    c.on('error',()=>{});
+    c.on('close',()=>{if(token===S.connToken)refreshConn()});
+    c.on('reconnect',()=>{if(token===S.connToken&&!connected())status(t('reconnecting'))});
+  });
+  if(!clients.length){
+    S.connecting=false;refreshConn();
+    toast(t('noBroker'),'error',6000);
   }
-  next();
+}
+function onBrokerUp(){
+  clearTimeout(S.failTimer);
+  S.connecting=false;
+  refreshConn();
+  if(!S.announced){
+    S.announced=true;
+    sys(t('joined',{room:S.room,nick:S.nick}));
+    pub({type:'join',avatar:S.avatar||undefined});
+    clearInterval(S.presenceTimer);clearInterval(S.sweepTimer);
+    S.presenceTimer=setInterval(()=>pub({type:'presence'}),CFG.PRESENCE);
+    S.sweepTimer=setInterval(sweep,3000);
+  }
+  // Several brokers can come up within a moment of each other: say hello once.
+  const now=Date.now();
+  if(now-S.lastHello>3000){
+    S.lastHello=now;
+    pub({type:'presence'});pub({type:'hello'});
+  }
+  renderMembers();renderBans();
+}
+function stopClients(graceful){
+  S.connToken++;               // every handler of the old clients becomes a no-op
+  clearTimeout(S.failTimer);
+  clearInterval(S.presenceTimer);clearInterval(S.sweepTimer);
+  const cs=S.clients;S.clients=[];
+  cs.forEach(({c})=>{try{c.end(!(graceful&&c.connected))}catch(e){}});
 }
 function disconnect(){
-  if(!S.client)return;
-  pub({type:'leave'});pub({type:'presence',offline:true});
-  clearInterval(S.presenceTimer);clearInterval(S.sweepTimer);
-  const cl=S.client;S.client=null;cl.end(false);
-  S.announced=false;S.peers.clear();renderMembers();
-  status(t('tapConnect'));
-  D.connectBtn.disabled=false;D.disconnectBtn.disabled=true;
-  S.connecting=false;syncComposer();
-  updateSelf();
-  sys(t('left'));
+  if(!S.clients.length&&!S.connecting)return;
+  const wasIn=S.announced&&connected();
+  if(wasIn){pub({type:'leave'});pub({type:'presence',offline:true})}
+  stopClients(true);
+  S.connecting=false;S.announced=false;S.peers.clear();
+  renderMembers();
+  refreshConn();
+  if(wasIn)sys(t('left'));
 }
 function pub(o){
-  if(S.ghost||!connected())return false;
+  if(!connected())return false;
   o.clientId=S.cid;o.nickname=S.nick;o.ts=o.ts||Date.now();o.msgId=o.msgId||uid();
   const p=JSON.stringify(o);
   if(p.length>CFG.MAX_CHARS){toast('Payload too big','error');return false}
-  if(S.client&&S.client.connected){
-    S.client.publish(S.topic,p,{qos:0});
-    return true;
-  }
-  return false;
+  let sent=false;
+  S.clients.forEach(({c})=>{
+    if(!c.connected)return;
+    try{c.publish(S.topic,p,{qos:0});sent=true}catch(e){}
+  });
+  return sent;
 }
 function incoming(payload){
   let m;try{m=JSON.parse(payload.toString())}catch(e){return}
   if(!m||typeof m!=='object'||typeof m.type!=='string'||typeof m.clientId!=='string')return;
   if(!/^[\w-]{1,40}$/.test(m.clientId)||m.clientId===S.cid)return;
+  if(m.msgId!==undefined&&!/^[\w-]{1,40}$/.test(String(m.msgId)))return;
+  if(m.msgId!==undefined){            // same packet arriving through another broker
+    const k=m.clientId+':'+m.msgId;
+    if(S.seen.has(k))return;
+    S.seen.add(k);
+    if(S.seen.size>CFG.SEEN_MAX)S.seen.delete(S.seen.values().next().value);
+  }
   if(rateLimited(m.clientId))return;
   if(isBanned(m.clientId))return;
-  if(m.msgId!==undefined&&!/^[\w-]{1,40}$/.test(String(m.msgId)))return;
   m.nickname=String(m.nickname||'anon').slice(0,32);
   m.ts=Date.now();
 
   {
     const prev=S.peers.get(m.clientId);
     const isChatType=['msg','img','audio','file'].includes(m.type);
+    const prevAv=prev?prev.avatar:null;
+    let av=prevAv;
+    if(m.type==='avatar'&&m.avatar===null)av=null;
+    else if(validAvatar(m.avatar))av=m.avatar;
     S.peers.set(m.clientId,{
       nickname:m.nickname,
       lastSeen:m.ts,
       typing:m.type==='typing'?!!m.on:(isChatType?false:(prev?prev.typing:false)),
       typingAt:m.type==='typing'&&m.on?m.ts:(prev?prev.typingAt:0),
-      avatar:validAvatar(m.avatar)?m.avatar:(prev?prev.avatar:null)
+      avatar:av
     });
-    if(!prev||prev.nickname!==m.nickname)renderMembers();
-    if(validAvatar(m.avatar)&&(!prev||prev.avatar!==m.avatar))rerenderPeer(m.clientId);
+    if(av!==prevAv)rerenderPeer(m.clientId);
+    else if(!prev||prev.nickname!==m.nickname)renderMembers();
   }
 
   switch(m.type){
     case 'join':      sys(t('userJoined',{nick:m.nickname||'anon'}));break;
-    case 'leave':     sys(t('userLeft',{nick:m.nickname||'anon'}));break;
+    case 'leave':     sys(t('userLeft',{nick:m.nickname||'anon'}));S.peers.delete(m.clientId);renderMembers();break;
     case 'presence':  if(m.offline){S.peers.delete(m.clientId);renderMembers()}break;
     case 'typing':    renderTyping();break;
     case 'msg': case 'img': case 'audio': case 'file': onChat(m);renderTyping();break;
@@ -932,7 +992,7 @@ function renderMembers(){
   const selfLi=document.createElement('li');
   selfLi.appendChild(avatarEl(S.nick||t('you'),S.cid,S.avatar,true));
   const selfSpan=document.createElement('span');
-  selfSpan.textContent=(S.nick||t('you'))+' ('+t('you').toLowerCase()+')'+(S.ghost?' 👻':'');
+  selfSpan.textContent=(S.nick||t('you'))+' ('+t('you').toLowerCase()+')';
   selfLi.appendChild(selfSpan);
   const selfDot=document.createElement('span');selfDot.className='dot';selfLi.appendChild(selfDot);
   D.members.appendChild(selfLi);
@@ -1286,7 +1346,6 @@ function insertMention(nick){
 
 // ===== Edit / delete =====
 function delMine(m,id){
-  if(!canAct())return;
   m.deleted=true;m.text='';m.data=null;
   pub({type:'delete',msgId:id});
   markDirty(id);
@@ -1409,7 +1468,7 @@ function applyCrop(){
   try{localStorage.setItem('mc_avatar',data)}catch(e){}
   D.cropView.hidden=true;Crop.img=null;
   renderJoinAvatar();updateSelf();
-  if(connected()&&!S.ghost)pub({type:'avatar',avatar:data});
+  if(connected())pub({type:'avatar',avatar:data});
   toast(t('avatarUpdated'),'success',2000);
 }
 function initCrop(){
@@ -1460,7 +1519,7 @@ function initJoin(){
     if(f)openCrop(f);
   };
   D.joinBtn.onclick=()=>{
-    const room=(D.joinRoom.value||'lobby').trim().replace(/[^\p{L}\p{N}_-]+/gu,'-').slice(0,32)||'lobby';
+    const room=cleanRoom(D.joinRoom.value);
     const nick=(D.joinNick.value.trim()||'anon-'+Math.random().toString(36).slice(2,6)).slice(0,32);
     D.joinRoom.value=room;D.joinNick.value=nick;
     D.room.value=room;D.nickname.value=nick;
@@ -1548,6 +1607,19 @@ async function importJson(file){
 function wire(){
   D.connectBtn.onclick=()=>{requestNotif();connect()};
   D.disconnectBtn.onclick=disconnect;
+  D.room.onkeydown=e=>{if(e.key==='Enter'&&!D.room.disabled)connect()};
+  D.nickname.onkeydown=e=>{if(e.key==='Enter'){D.nickname.blur();if(!S.clients.length&&!S.connecting)connect()}};
+  D.nickname.onchange=()=>{
+    const n=D.nickname.value.trim().slice(0,32);
+    if(!n){D.nickname.value=S.nick;return}
+    if(n===S.nick)return;
+    S.nick=n;D.nickname.value=n;
+    localStorage.setItem('mc_nick',n);
+    updateSelf();renderMembers();
+    if(connected()){pub({type:'presence'});sys(t('nickChanged',{nick:n}))}
+  };
+  D.selfAvatar.onclick=()=>D.avatarChangeInput.click();
+  initSections();
 
   D.composerForm.onsubmit=(e)=>{e.preventDefault();sendText()};
 
@@ -1591,7 +1663,6 @@ function wire(){
   D.stickerInput.onchange=()=>{sendImage(D.stickerInput.files[0],true);D.stickerInput.value=''};
   D.fileInput.onchange=()=>{sendFile(D.fileInput.files[0]);D.fileInput.value=''};
   D.audioBtn.onclick=toggleRec;
-  D.ghost.onchange=()=>setGhost(D.ghost.checked);
   D.clearHist.onclick=()=>{if(confirm(t('clearAsk')))clearHistory()};
   D.replyClose.onclick=clearReply;
 
@@ -1599,7 +1670,7 @@ function wire(){
   D.removeAvatar.onclick=()=>{
     S.avatar=null;localStorage.removeItem('mc_avatar');
     updateSelf();
-    if(connected()&&!S.ghost)pub({type:'avatar',avatar:null});
+    if(connected())pub({type:'avatar',avatar:null});
   };
   D.avatarChangeInput.onchange=()=>{
     const f=D.avatarChangeInput.files[0];
@@ -1823,14 +1894,14 @@ function init(){
 
   D.room.value=localStorage.getItem('mc_room')||'lobby';
   D.nickname.value=localStorage.getItem('mc_nick')||'';
-  D.ghost.checked=S.ghost;
+  try{localStorage.removeItem('mc_ghost')}catch(e){}
   S.nick=D.nickname.value;
 
   D.roomName.textContent=D.room.value;
   D.roomAvatar.textContent='#'+(D.room.value[0]||'').toUpperCase();
   D.roomAvatar.style.background=colorFor(D.room.value);
 
-  updateSelf();renderMembers();renderBans();
+  updateSelf();renderMembers();renderBans();syncConn();syncComposer();
 }
 init();
 })();

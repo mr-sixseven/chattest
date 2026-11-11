@@ -158,6 +158,58 @@ input,select,textarea,button{font:inherit;color:inherit}
 [hidden]{display:none!important}
 @media (max-width:720px){
   #app{grid-template-columns:1fr}
+/* Avatar image support */
+.avatar { overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Join screen */
+#joinScreen { position: fixed; inset: 0; z-index: 5000; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+.join-card { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 26px; box-shadow: 0 20px 60px rgba(0,0,0,.5); backdrop-filter: var(--blur); }
+.join-brand { text-align: center; margin-bottom: 20px; }
+.join-logo { font-size: 2.6rem; line-height: 1; }
+.join-brand h1 { margin: 6px 0 4px; font-size: 1.5rem; }
+.join-sub { margin: 0; color: var(--muted); font-size: .85rem; }
+.join-avatar-row { display: flex; align-items: center; gap: 16px; margin: 18px 0; justify-content: center; }
+.avatar.lg { width: 84px; height: 84px; font-size: 1.8rem; box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--border); }
+.join-avatar-btns { display: flex; flex-direction: column; gap: 6px; }
+.join-avatar-btns button { padding: 7px 12px; background: var(--input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: .82rem; cursor: pointer; }
+.join-avatar-btns button:hover { background: var(--hover); }
+.join-label { display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 12px 0 4px; font-weight: 600; }
+#joinRoom, #joinNick { width: 100%; padding: 10px 12px; background: var(--input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: .95rem; outline: none; }
+#joinRoom:focus, #joinNick:focus { border-color: var(--accent); }
+.join-go { width: 100%; margin-top: 18px; padding: 12px; background: var(--accent); color: var(--accent-fg); border: none; border-radius: 10px; font-weight: 700; font-size: .95rem; cursor: pointer; }
+.join-go:hover { filter: brightness(1.1); }
+.join-hint { text-align: center; font-size: .78rem; color: var(--muted); margin-top: 10px; min-height: 1em; }
+
+/* Crop viewfinder */
+#cropView { position: fixed; inset: 0; z-index: 6000; background: rgba(0,0,0,.85); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.crop-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 22px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.crop-card h2 { margin: 0 0 14px; font-size: 1.05rem; text-align: center; }
+.crop-stage { position: relative; width: 240px; height: 240px; margin: 6px auto 18px; }
+#cropCanvas { width: 240px; height: 240px; border-radius: 50%; display: block; background: #111; cursor: grab; touch-action: none; }
+#cropCanvas:active { cursor: grabbing; }
+.crop-ring { position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--accent); box-shadow: 0 0 0 4px rgba(0,0,0,.35) inset; pointer-events: none; }
+.crop-controls { display: flex; flex-direction: column; gap: 14px; }
+.crop-zoom { display: flex; align-items: center; gap: 10px; font-size: .82rem; color: var(--muted); }
+.crop-zoom input { flex: 1; }
+.crop-actions { display: flex; gap: 8px; }
+.crop-actions button { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--input); color: var(--text); cursor: pointer; font-weight: 600; }
+#cropOk { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+
+/* Sticker rendering */
+.bubble.sticker-bubble { background: transparent !important; box-shadow: none; padding: 2px 2px 16px; min-width: 0; }
+.bubble.sticker-bubble img { max-width: 160px; max-height: 160px; border-radius: 4px; }
+.bubble.sticker-bubble .meta { color: var(--muted); }
+.msg.own .bubble.sticker-bubble .meta { color: var(--muted); }
+
+/* Banned members list */
+#members li.banned { opacity: .5; }
+#members li.banned span:not(.dot) { text-decoration: line-through; }
+#bans { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+#bans li { display: flex; align-items: center; gap: 6px; font-size: .8rem; padding: 4px 6px; border-radius: 6px; background: var(--input); }
+#bans li span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#bans li button { background: none; border: 1px solid var(--border); color: var(--text); font-size: .7rem; padding: 2px 8px; border-radius: 6px; cursor: pointer; }
+#bans li button:hover { background: var(--hover); }
   #sidebar{position:fixed;inset:0 auto 0 0;width:280px;transform:translateX(-100%);transition:transform .25s;box-shadow:4px 0 24px rgba(0,0,0,.5)}
   #sidebar.open{transform:translateX(0)}
   #head #sidebarToggle{display:block}

@@ -6,6 +6,13 @@
 <title>MiniChat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.webmanifest"/>
+<meta name="theme-color" content="#202c33"/>
+<link rel="icon" type="image/png" href="icon-192.png"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="MiniChat"/>
 <link rel="stylesheet" href="themes.css"/>
 </head>
 <body>
@@ -132,6 +139,7 @@
           </select></label>
         <label class="field"><span class="field-lbl"><span data-i18n="font">Font</span><span id="fontLabel">100%</span></span>
           <input id="fontSize" type="range" min="85" max="130" value="100" step="5"/></label>
+        <button id="installBtn" class="secondary" data-i18n="installApp" hidden>📲 Install app</button>
       </div>
     </details>
   </aside>
@@ -189,12 +197,35 @@
         <button type="button" data-a="image">🖼️ <span data-i18n="image">Image</span></button>
         <button type="button" data-a="sticker">🌟 <span data-i18n="sticker">Sticker</span></button>
         <button type="button" data-a="file">📄 <span data-i18n="file">Document</span></button>
+        <button type="button" data-a="app">🧩 <span data-i18n="miniApps">Mini apps</span></button>
       </div>
       <div id="mentions" hidden></div>
     </footer>
   </main>
 </div>
 
+<div id="appDialog" hidden>
+  <div class="app-card" role="dialog" aria-modal="true">
+    <div class="app-head">
+      <h2 data-i18n="miniApps">Mini apps</h2>
+      <button type="button" id="appClose" aria-label="Close">✕</button>
+    </div>
+    <div class="app-tabs" id="appTabs">
+      <button type="button" data-app="stopwatch">⏱️ <span data-i18n="appStopwatch">Stopwatch</span></button>
+      <button type="button" data-app="timer">⏲️ <span data-i18n="appTimer">Timer</span></button>
+      <button type="button" data-app="countdown">📅 <span data-i18n="appCountdown">Countdown</span></button>
+      <button type="button" data-app="clock">🕒 <span data-i18n="appClock">Clock</span></button>
+      <button type="button" data-app="poll">📊 <span data-i18n="appPoll">Poll</span></button>
+      <button type="button" data-app="custom">🧩 <span data-i18n="appCustom">Custom HTML</span></button>
+    </div>
+    <div id="appFormBox"></div>
+    <div id="appPreview"></div>
+    <div class="app-actions">
+      <button type="button" id="appPreviewBtn" class="secondary" data-i18n="appPreview" hidden>Preview</button>
+      <button type="button" id="appSend" data-i18n="appSend">Send to chat</button>
+    </div>
+  </div>
+</div>
 <div id="ctx" hidden></div>
 <div id="emojiPicker" hidden></div>
 <div id="lightbox" hidden><img id="lightboxImg" alt=""/></div>

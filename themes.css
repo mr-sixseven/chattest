@@ -257,3 +257,40 @@ input,select,textarea,button{font:inherit;color:inherit}
   .msg{max-width:88%}
   .bubble img{max-width:240px;max-height:240px}
 }
+/* ============ Mini apps, polls, commands ============ */
+.bubble.app-bubble{padding:6px 6px 20px;min-width:0}
+.app-title{font-size:.72rem;opacity:.75;margin:0 4px 4px}
+.app-frame{display:block;width:min(300px,64vw);border:0;border-radius:8px;background:rgba(0,0,0,.22)}
+.app-gate{display:flex;flex-direction:column;gap:8px;padding:8px;font-size:.85rem;max-width:260px}
+.app-gate button,.poll-opt{font:inherit}
+.app-gate button{padding:6px 10px;border:0;border-radius:8px;background:var(--accent);color:var(--accent-fg);font-weight:600;cursor:pointer}
+.poll{display:flex;flex-direction:column;gap:6px;min-width:230px;max-width:300px;padding:4px}
+.poll-q{font-weight:600;margin-bottom:2px;word-break:break-word}
+.poll-opt{position:relative;overflow:hidden;display:flex;justify-content:space-between;gap:10px;padding:7px 10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.2);color:inherit;border-radius:8px;cursor:pointer;text-align:left}
+.poll-opt.mine{border-color:var(--accent)}
+.poll-bar{position:absolute;inset:0 auto 0 0;background:var(--accent);opacity:.3;transition:width .25s}
+.poll-t,.poll-n{position:relative}
+.poll-t{word-break:break-word}
+.poll-n{opacity:.8;font-size:.8em;white-space:nowrap}
+.poll-foot{font-size:.72rem;opacity:.7;margin-left:2px}
+.action-text{font-style:italic}
+.date.plain{text-transform:none;letter-spacing:0;text-align:left;white-space:pre-wrap;border-radius:12px;max-width:92%;margin:3px 0}
+#mentions .m-item .cmd{font-weight:600}
+#mentions .m-item .cmd-u{color:var(--muted);font-size:.78rem;margin-left:8px}
+
+#appDialog{position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px}
+.app-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;width:100%;max-width:440px;max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:12px}
+.app-head{display:flex;align-items:center;justify-content:space-between}
+.app-head h2{margin:0;font-size:1.05rem}
+.app-head button{background:none;border:none;color:var(--text);font-size:1.1rem;cursor:pointer}
+.app-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.app-tabs button{padding:6px 10px;border-radius:99px;border:1px solid var(--border);background:var(--input);color:var(--text);cursor:pointer;font-size:.82rem}
+.app-tabs button.on{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+#appFormBox{display:flex;flex-direction:column;gap:10px}
+#appDialog input,#appDialog textarea{width:100%;padding:8px 10px;background:var(--input);border:1px solid var(--border);border-radius:var(--radius);outline:none;font:inherit;color:inherit}
+#appDialog textarea{resize:vertical;font-family:ui-monospace,monospace;font-size:.85rem}
+#appDialog input:focus,#appDialog textarea:focus{border-color:var(--accent)}
+#appPreview .app-frame{width:100%}
+.app-actions{display:flex;gap:8px;justify-content:flex-end}
+.app-actions button{padding:8px 14px;border-radius:var(--radius);border:none;background:var(--accent);color:var(--accent-fg);font-weight:600;cursor:pointer}
+.app-actions button.secondary{background:var(--input);color:var(--text);border:1px solid var(--border)}
